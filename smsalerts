@@ -1,0 +1,19 @@
+from twilio.rest import Client
+from datetime import datetime
+
+from library_management import db_utils
+
+def send_alerts():
+    users = db_utils.get_users()
+    for user in users:
+        renewal_date = datetime.strptime(user[9], "%Y-%m-%d")  # renewal_date
+        days_left = (renewal_date - datetime.now()).days
+        if days_left <= 3 and user[7] == 1:  # active
+            account_sid = "YOUR_TWILIO_SID"
+            auth_token = "YOUR_TWILIO_AUTH"
+            client = Client(account_sid, auth_token)
+            client.messages.create(
+                from_="whatsapp:+14155238886",
+                body=f"Reminder: Your library seat payment is due in {days_left} days.",
+                to=f"whatsapp:{user[2]}"  # phone
+            )

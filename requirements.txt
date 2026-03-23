@@ -1,0 +1,22 @@
+# Core app
+streamlit
+pandas
+passlib
+onetimepass
+
+# Database
+ # (built-in with Python, you don’t need to install separately)
+
+# Security
+bcrypt    # for password hashing
+pyotp     # for MFA (time-based one-time passwords)
+
+# Optional utilities
+python-dotenv   # if you want to manage secrets via .env files
+streamlit
+psycopg2-binary
+sqlalchemy
+pandas
+plotly
+twilio
+
