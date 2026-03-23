@@ -35,7 +35,13 @@ def register_user(name, phone, email, course, seat, plan, start_date, payment_mo
 
 def change_seat(user_id, new_seat):
     conn = connect_db()
+
+    # Cast to plain Python int
+    user_id = int(user_id)
+
+    new_seat = int(new_seat)
     result = conn.execute("SELECT COUNT(*) FROM users WHERE seat=? AND id!=?", (new_seat, user_id)).fetchone()
+    
     if result[0] > 0:
         conn.close()
         return False, f"Seat {new_seat} is already taken."
@@ -47,6 +53,9 @@ def change_seat(user_id, new_seat):
 
 def deactivate_user(user_id):
     conn = connect_db()
+
+    # Cast to plain Python int
+    user_id = int(user_id)
     conn.execute("UPDATE users SET active_status=0 WHERE id=?", (user_id,))
     conn.commit()
     conn.close()
@@ -54,6 +63,8 @@ def deactivate_user(user_id):
 
 def activate_user(user_id, start_date, plan, payment_mode, remarks):
     conn = connect_db()
+    # Cast to plain Python int
+    user_id = int(user_id)
     conn.execute(
         "UPDATE users SET active_status=1, start_date=?, payment_plan=?, remarks=?, payment_mode=? WHERE id=?",
         (start_date, plan, remarks, payment_mode, user_id)
