@@ -1,7 +1,7 @@
 import duckdb
 from datetime import datetime, timedelta
 
-DB_NAME = "library.duckdb"
+DB_NAME = "mnt/data/library.duckdb"
 
 def connect_db():
     # Persistent DuckDB file

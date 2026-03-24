@@ -1,7 +1,7 @@
 import duckdb
 
 # Connect to a persistent DuckDB file
-conn = duckdb.connect("library.duckdb")
+conn = duckdb.connect("mnt/data/library.duckdb")
 
 # Create auth_users table
 conn.execute("""
