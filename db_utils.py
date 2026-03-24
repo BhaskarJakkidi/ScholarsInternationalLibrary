@@ -54,7 +54,7 @@ def change_seat(user_id, new_seat):
 def get_user_details():
     conn = duckdb.connect("library.duckdb")
     query = """
-        SELECT id, name, phone, start_date, renewal_date, payment_mode
+        SELECT id, name, phone, seat, start_date, renewal_date, payment_mode
         FROM users
         ORDER BY id
     """
