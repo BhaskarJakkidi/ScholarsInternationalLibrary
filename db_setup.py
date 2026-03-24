@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS auth_users (
 );
 """)
 
-
+conn.execute("""DROP SEQUENCE IF EXISTS user_id_seq;""")
 conn.execute("""CREATE SEQUENCE user_id_seq START 1;""")
 
 # Create users table
@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS users (
     phone TEXT NOT NULL,
     email TEXT NOT NULL,
     course TEXT,
-    seat INTEGER UNIQUE,
+    seat INTEGER ,
     start_date TEXT,
     active_status INTEGER DEFAULT 1,
     payment_plan TEXT,             

@@ -51,6 +51,17 @@ def change_seat(user_id, new_seat):
     conn.close()
     return True, "Seat updated successfully!"
 
+def get_user_details():
+    conn = duckdb.connect("library.duckdb")
+    query = """
+        SELECT id, name, phone, start_date, renewal_date, payment_mode
+        FROM users
+        ORDER BY id
+    """
+    df = conn.execute(query).fetchdf()
+    conn.close()
+    return df
+
 def deactivate_user(user_id):
     conn = connect_db()
 

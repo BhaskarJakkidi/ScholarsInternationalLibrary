@@ -2,7 +2,7 @@ import streamlit as st
 import db_utils
 import pandas as pd
 
-st.title("📚 Scholars International")
+st.title("📚 Scholars International Study Hall")
 import datetime
 import pandas as pd
 import db_utils
@@ -19,12 +19,12 @@ else:
 
     # Role‑based menu
     if st.session_state.role == "admin":
-        menu_options = ["Register User","Renewal Payment", "Change Seat", "Deactivate User", "Dashboard"]
+        menu_options = ["Register User","Renewal Payment", "Change Seat","User Report", "Deactivate User", "Dashboard"]
     else:
         menu_options = ["dasbard"]
 
     # --- Main Menu ---
-    menu = st.sidebar.selectbox("Menu", ["Register User", "Change Seat","Renewal Payment", "Deactivate User", "Dashboard"]
+    menu = st.sidebar.selectbox("Menu", ["Register User", "Change Seat","User Report","Renewal Payment", "Deactivate User", "Dashboard"]
     )
     st.session_state.menu = menu
 
@@ -57,6 +57,26 @@ else:
                 )
                 st.success(message) if success else st.error(message)
 
+    elif menu == "User Report":
+        st.subheader("Registered Users")
+        df = db_utils.get_user_details()
+
+        if df.empty:
+            st.info("No users found.")
+        else:
+            # Style the header row: light blue background, bold black text
+         styled_df = df.style.set_table_styles(
+            [{
+                'selector': 'th',
+                'props': [
+                    ('background-color', '#ADD8E6'),  # Light blue
+                    ('color', 'black'),               # Black font
+                    ('font-weight', 'bold')           # Bold text
+                ]
+            }]
+        )
+
+        st.dataframe(styled_df, use_container_width=True)
 
     # Payment Renewal
     elif menu=="Renewal Payment":
