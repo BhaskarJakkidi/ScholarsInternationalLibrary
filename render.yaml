@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: scholars-international-study-hall
+    env: python
+    plan: starter
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "streamlit run app.py --server.port $PORT --server.enableCORS false --server.headless true"
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: PYTHONUNBUFFERED
+        value: "1"

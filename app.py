@@ -1,6 +1,10 @@
 import streamlit as st
 import db_utils
 import pandas as pd
+from db_setup import setup_db
+
+# Ensure required tables exist before app starts
+setup_db()
 
 st.title("📚 Scholars International Study Hall")
 import datetime
@@ -177,6 +181,7 @@ else:
                 start_date = st.date_input("Start Date", key="activate_start_date")
                 plan = st.selectbox("Payment Plan", ["15 days", "1 month", "3 months"], key="activate_plan")
                 payment_mode = st.selectbox("Payment Mode", ["Cash", "Card", "UPI", "NetBanking"], key="activate_payment_mode")
+                seat = st.number_input("Seat Number", min_value=1, max_value=110, value=int(old_seat or 1), key="activate_seat")
                 remarks = st.text_area("Remarks / Notes", key="activate_remarks")
 
                 if st.button("Activate", key="activate_user_button"):
@@ -185,133 +190,35 @@ else:
                         start_date.strftime("%Y-%m-%d"),
                         plan,
                         payment_mode,
-                        remarks
+                        remarks,
+                        seat
                     )
                     st.success(message) if success else st.error(message)
 
 
     # Dashboard
-    # elif menu == "Dashboard":
-    #     import datetime
-
-    #     total_seats = db_utils.get_total_seats()
-    #     users = db_utils.get_users()
-    #     df = pd.DataFrame(users, columns=[
-    #         "id","Name","Phone","Email","Course","Seat","StartDate","Active","Plan","Renewal","PaymentMode","Remarks"
-    #     ])
-
-    #     # Only include active users
-    #     df_active = df[df["Active"] == 1]
-    #     filled_seats = df_active["Seat"].tolist()
-
-    #     st.subheader("Seat Map")
-    #     num_cols = 11  # 11x10 grid for 110 seats
-    #     today = datetime.date.today()
-
-    #     # Define CSS animation once
-    #     st.markdown(
-    #         """
-    #         <style>
-    #         @keyframes blink {
-    #             0% { opacity: 1; }
-    #             50% { opacity: 0; }
-    #             100% { opacity: 1; }
-    #         }
-    #         .blink { animation: blink 1s infinite; }
-    #         .seat-box {
-    #             display:inline-block;
-    #             width:40px; height:40px;
-    #             margin:2px;
-    #             text-align:center;
-    #             color:white;
-    #             font-weight:bold;
-    #             border-radius:5px;
-    #             cursor:pointer;
-    #         }
-    #         .green { background-color:green; }
-    #         .red { background-color:red; }
-    #         .purple { background-color:purple; }
-    #         .yellow { background-color:yellow; color:black; }
-    #         .skyblue { background-color:skyblue; color:black; }
-    #         </style>
-    #         """,
-    #         unsafe_allow_html=True
-    #     )
-
-    #     for row in range(10):
-    #         row_html = ""
-    #         for col_idx in range(num_cols):
-    #             seat_num = row * num_cols + col_idx + 1
-    #             if seat_num in filled_seats:
-    #                 user = df_active[df_active["Seat"] == seat_num].iloc[0]
-
-    #                 # Parse renewal date
-    #                 try:
-    #                     renewal_date = datetime.datetime.strptime(user["Renewal"], "%Y-%m-%d").date()
-    #                     days_left = (renewal_date - today).days
-    #                 except Exception:
-    #                     days_left = None
-
-    #                 # Decide color based on days left
-    #                 color_class = "red"
-    #                 blink_class = ""
-    #                 if days_left is not None:
-    #                     if days_left == 1:
-    #                         color_class = "skyblue"; blink_class = "blink"
-    #                     elif days_left == 2:
-    #                         color_class = "yellow"; blink_class = "blink"
-    #                     elif days_left == 3:
-    #                         color_class = "purple"; blink_class = "blink"
-
-    #                 row_html += f"""
-    #                 <button title='{user['Name']} ({user['Phone']}) - Renewal in {days_left} days'
-    #                         class='seat-box {color_class} {blink_class}'
-    #                         onclick="window.location.href='?seat={seat_num}'">
-    #                     {seat_num}
-    #                 </button>
-    #                 """
-    #             else:
-    #                 # Available seat → green
-    #                 row_html += f"""
-    #                 <div class='seat-box green'>{seat_num}</div>
-    #                 """
-    #         st.markdown(row_html, unsafe_allow_html=True)
-
-    #     # Handle seat click (using query param trick)
-    #     seat_clicked = st.query_params.get("seat")
-    #     if seat_clicked:
-    #         seat_clicked = int(seat_clicked)
-    #         user = df_active[df_active["Seat"] == seat_clicked].iloc[0]
-    #         st.write(f"### User Details for Seat {seat_clicked}")
-    #         st.write(f"Name: {user['Name']}")
-    #         st.write(f"Phone: {user['Phone']}")
-    #         st.write(f"Renewal Date: {user['Renewal']}")
-
-    #         if st.button("Send Renewal Message", key=f"renew_msg_{seat_clicked}"):
-    #             success, msg = db_utils.send_renewal_message(user["id"])
-    #             st.success(msg) if success else st.error(msg)
-
-    #         payment_mode = st.selectbox("Payment Mode", ["Cash", "Card", "UPI", "NetBanking"], key=f"pay_mode_{seat_clicked}")
-    #         remarks = st.text_area("Remarks", key=f"remarks_{seat_clicked}")
-    #         if st.button("Update Payment", key=f"update_payment_{seat_clicked}"):
-    #             success, msg = db_utils.update_payment(user["id"], payment_mode, remarks)
-    #             st.success(msg) if success else st.error(msg)
 
     elif menu == "Dashboard":
         import datetime
 
-        total_seats = db_utils.get_total_seats()
+        total_seats = db_utils.get_total_seats() or 110
         users = db_utils.get_users()
         df = pd.DataFrame(users, columns=[
-            "id","Name","Phone","Email","Course","Seat","StartDate","Active","Plan","Renewal","PaymentMode","Remarks"
+            "id", "Name", "Phone", "Email", "Course", "Seat", "StartDate", "Active", "Plan", "Renewal", "PaymentMode", "Remarks"
         ])
 
         # Only include active users
         df_active = df[df["Active"] == 1]
-        filled_seats = df_active["Seat"].tolist()
+
+        if df_active.empty:
+            st.warning("No active users found. Add at least one registration first.")
+            st.stop()
+
+        filled_seats = df_active["Seat"].astype(int).tolist()
 
         st.subheader("Seat Map")
         cols = 10  # 11x10 grid for 110 seats
+        rows = (total_seats + cols - 1) // cols
         today = datetime.date.today()
 
         # Define CSS animation once
@@ -331,17 +238,22 @@ else:
             unsafe_allow_html=True
         )
 
-        for row in range(11):
+        for row in range(rows):
             cols_html = ""
             for col in range(cols):
-                seat_num = row*cols + col + 1
+                seat_num = row * cols + col + 1
+                if seat_num > total_seats:
+                    continue
+
                 if seat_num in filled_seats:
                     user = df_active[df_active["Seat"] == seat_num].iloc[0]
 
                     # Parse renewal date
+                    days_left = None
                     try:
-                        renewal_date = datetime.datetime.strptime(user["Renewal"], "%Y-%m-%d").date()
-                        days_left = (renewal_date - today).days
+                        if pd.notna(user["Renewal"]):
+                            renewal_date = datetime.datetime.strptime(str(user["Renewal"]), "%Y-%m-%d").date()
+                            days_left = (renewal_date - today).days
                     except Exception:
                         days_left = None
 
@@ -363,7 +275,7 @@ else:
                             blink_class = "blink"
 
                     cols_html += f"""
-                    <div title='{user['Name']} ({user['Phone']}) ({user['StartDate']}) - Renewal in {days_left} days' 
+                    <div title='{user['Name']} ({user['Phone']}) ({user['StartDate']}) - Renewal in {days_left if days_left is not None else 'N/A'} days'
                         class='{blink_class}'
                         style='display:inline-block;width:40px;height:40px;
                         background-color:{color};margin:2px;text-align:center;color:white;'>

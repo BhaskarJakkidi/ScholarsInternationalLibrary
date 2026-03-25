@@ -1,52 +1,74 @@
-import duckdb
+import os
+import psycopg2
+from urllib.parse import urlparse
 
-# Connect to a persistent DuckDB file
-conn = duckdb.connect("mnt/data/library.duckdb")
+# Connection details – scale to Render DATABASE_URL or local fallback
+def get_db_config():
+    database_url = os.getenv("DATABASE_URL")
+    if database_url:
+        result = urlparse(database_url)
+        return {
+            "dbname": result.path.lstrip("/"),
+            "user": result.username,
+            "password": result.password,
+            "host": result.hostname,
+            "port": result.port,
+        }
+    return {
+        "dbname": "postgres",
+        "user": "admin",
+        "password": "admin1231",
+        "host": "localhost",
+        "port": 5432,
+    }
 
-# Create auth_users table
-conn.execute("""
-CREATE TABLE IF NOT EXISTS auth_users (
-    id INTEGER PRIMARY KEY,
-    username TEXT UNIQUE NOT NULL,
-    password_hash TEXT NOT NULL,
-    role TEXT NOT NULL,              -- e.g. 'admin' or 'staff'
-    mfa_secret TEXT NOT NULL         -- secret key for MFA
-);
-""")
+DB_CONFIG = get_db_config()
 
-conn.execute("""DROP SEQUENCE IF EXISTS user_id_seq;""")
-conn.execute("""CREATE SEQUENCE user_id_seq START 1;""")
+def setup_db():
+    conn = psycopg2.connect(**DB_CONFIG)
+    cursor = conn.cursor()
 
-# Create users table
-conn.execute("""
-CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY DEFAULT NEXTVAL('user_id_seq'),
-    name TEXT NOT NULL,
-    phone TEXT NOT NULL,
-    email TEXT NOT NULL,
-    course TEXT,
-    seat INTEGER ,
-    start_date TEXT,
-    active_status INTEGER DEFAULT 1,
-    payment_plan TEXT,             
-    renewal_date TEXT,
-    payment_mode TEXT,
-    remarks TEXT
-);
-""")
+    # Create auth_users table
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS auth_users (
+        id SERIAL PRIMARY KEY,
+        username TEXT UNIQUE NOT NULL,
+        password_hash TEXT NOT NULL,
+        role TEXT NOT NULL,              -- e.g. 'admin' or 'staff'
+        mfa_secret TEXT NOT NULL         -- secret key for MFA
+    );
+    """)
 
-# Create seats table
-conn.execute("""
-CREATE TABLE IF NOT EXISTS seats (
-    id INTEGER PRIMARY KEY,
-    total_seats INTEGER NOT NULL
-);
-""")
+    # Create users table
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        phone TEXT NOT NULL,
+        email TEXT NOT NULL,
+        course TEXT,
+        seat INTEGER,
+        start_date DATE,
+        active_status INTEGER DEFAULT 1,
+        payment_plan TEXT,
+        renewal_date DATE,
+        payment_mode TEXT,
+        remarks TEXT
+    );
+    """)
 
-# Initialize total seats = 110
-conn.execute("DELETE FROM seats")
-conn.execute("INSERT INTO seats (id,total_seats) VALUES (1,110)")
+    # Create seats table
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS seats (
+        id SERIAL PRIMARY KEY,
+        total_seats INTEGER NOT NULL
+    );
+    """)
 
-# Commit changes
-conn.commit()
-conn.close()
+    # Initialize total seats = 110
+    cursor.execute("DELETE FROM seats;")
+    cursor.execute("INSERT INTO seats (total_seats) VALUES (110);")
+
+    conn.commit()
+    cursor.close()
+    conn.close()
