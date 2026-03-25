@@ -1,10 +1,34 @@
+import os
 import streamlit as st
-import sqlite3
+import psycopg2
 import hashlib
 import random
+from urllib.parse import urlparse
+
+# Connection details – scale to Render DATABASE_URL or local fallback
+def get_db_config():
+    database_url = os.getenv("DATABASE_URL")
+    if database_url:
+        result = urlparse(database_url)
+        return {
+            "dbname": result.path.lstrip("/"),
+            "user": result.username,
+            "password": result.password,
+            "host": result.hostname,
+            "port": result.port,
+        }
+    return {
+        "dbname": "postgres",
+        "user": "admin",
+        "password": "admin1231",
+        "host": "localhost",
+        "port": 5432,
+    }
+
+DB_CONFIG = get_db_config()
 
 def connect_db():
-    return sqlite3.connect("users.db")
+    return psycopg2.connect(**DB_CONFIG)
 
 def hash_password(password: str) -> str:
     """Hash password using SHA256 (simpler than bcrypt/passlib)."""
@@ -13,7 +37,7 @@ def hash_password(password: str) -> str:
 def verify_user(username, password):
     conn = connect_db()
     cursor = conn.cursor()
-    cursor.execute("SELECT password_hash, role, mfa_secret FROM auth_users WHERE username=?", (username,))
+    cursor.execute("SELECT password_hash, role, mfa_secret FROM auth_users WHERE username=%s", (username,))
     row = cursor.fetchone()
     conn.close()
     if row:

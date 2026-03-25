@@ -1,25 +1,33 @@
-import duckdb
+import psycopg2
 import hashlib
 import random
 
-DB_FILE = "users.duckdb"
+# Connection details – adjust to your PostgreSQL setup
+DB_CONFIG = {
+    "dbname": "postgres",
+    "user": "admin",
+    "password": "admin1231",
+    "host": "localhost",   # or your server IP
+    "port": 5432
+}
 
 def hash_password(password: str) -> str:
     """Hash password using SHA256."""
     return hashlib.sha256(password.encode()).hexdigest()
 
-def create_admin(username="admin", password="admin5312"):
-    conn = duckdb.connect(DB_FILE)
-    conn.execute("""CREATE SEQUENCE user_id_seq_no START 1;""")
+def create_admin(username="admin", password="admin123"):
+    conn = psycopg2.connect(**DB_CONFIG)
+    cursor = conn.cursor()
+
     # Ensure table exists
-    conn.execute("""
+    cursor.execute("""
     CREATE TABLE IF NOT EXISTS auth_users (
-        id INTEGER PRIMARY KEY  DEFAULT NEXTVAL('user_id_seq_no'),
+        id SERIAL PRIMARY KEY,
         username TEXT UNIQUE NOT NULL,
         password_hash TEXT NOT NULL,
         role TEXT NOT NULL,
         mfa_secret TEXT NOT NULL
-    )
+    );
     """)
 
     # Hash password
@@ -30,16 +38,18 @@ def create_admin(username="admin", password="admin5312"):
 
     # Insert admin user
     try:
-        conn.execute(
-            "INSERT INTO auth_users (username, password_hash, role, mfa_secret) VALUES (?, ?, ?, ?)",
+        cursor.execute(
+            "INSERT INTO auth_users (username, password_hash, role, mfa_secret) VALUES (%s, %s, %s, %s)",
             (username, password_hash, "admin", mfa_secret)
         )
         conn.commit()
         print(f"Admin user '{username}' created successfully.")
         print(f"Use this MFA code for login: {mfa_secret}")
-    except duckdb.ConstraintException:
+    except psycopg2.errors.UniqueViolation:
+        conn.rollback()
         print(f"User '{username}' already exists.")
     finally:
+        cursor.close()
         conn.close()
 
 if __name__ == "__main__":
