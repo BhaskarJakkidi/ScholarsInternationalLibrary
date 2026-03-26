@@ -113,10 +113,16 @@ def activate_user(user_id, start_date, plan, payment_mode, remarks, seat):
     if result[0] > 0:
         conn.close()
         return False, f"Seat {seat} is already assigned to another active user."
-
+    # Calculate renewal date
+    if plan == "15 days":
+        renewal = datetime.strptime(start_date, "%Y-%m-%d") + timedelta(days=15)
+    elif plan == "1 month":
+        renewal = datetime.strptime(start_date, "%Y-%m-%d") + timedelta(days=30)
+    else:
+        renewal = datetime.strptime(start_date, "%Y-%m-%d") + timedelta(days=90)
     cursor.execute(
-        "UPDATE users SET active_status=1, start_date=%s, payment_plan=%s, remarks=%s, payment_mode=%s, seat=%s WHERE id=%s",
-        (start_date, plan, remarks, payment_mode, seat, user_id)
+        "UPDATE users SET active_status=1, start_date=%s, payment_plan=%s, remarks=%s, payment_mode=%s, seat=%s, renewal_date=%s WHERE id=%s",
+        (start_date, plan, remarks, payment_mode, seat, renewal, user_id)
     )
     conn.commit()
     conn.close()
