@@ -5,7 +5,7 @@ from db_setup import setup_db
 
 # Ensure required tables exist before app starts
 setup_db()
-
+st.set_page_config(layout="wide")
 st.title("📚 Scholars International Study Hall")
 import datetime
 import pandas as pd
