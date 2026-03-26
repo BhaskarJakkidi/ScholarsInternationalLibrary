@@ -2,28 +2,30 @@ import os
 import psycopg2
 from urllib.parse import urlparse
 import sys
-
+import db_utils
 # Connection details – scale to Render DATABASE_URL or local fallback
-def get_db_config():
-    database_url = os.getenv("DATABASE_URL")
-    if database_url:
-        result = urlparse(database_url)
-        return {
-            "dbname": result.path.lstrip("/"),
-            "user": result.username,
-            "password": result.password,
-            "host": result.hostname,
-            "port": result.port,
-        }
-    return {
-        "dbname": "postgres",
-        "user": "admin",
-        "password": "admin1231",
-        "host": "localhost",
-        "port": 5432,
-    }
+# def get_db_config():
+#     database_url = os.getenv("DATABASE_URL")
+#     DATABASE_URL="postgresql://postgres:TpqTueRhigoVZeNksTpfdIWggGWoircA@postgres.railway.internal:5432/railway"
+                  
+#     if database_url:
+#         result = urlparse(database_url)
+#         return {
+#             "dbname": result.path.lstrip("/"),
+#             "user": result.username,
+#             "password": result.password,
+#             "host": result.hostname,
+#             "port": result.port,
+#         }
+#     return {
+#         "dbname": "railway",
+#         "user": "postgres",
+#         "password": "TpqTueRhigoVZeNksTpfdIWggGWoircA",
+#         "host": "crossover.proxy.rlwy.net",
+#         "port": 30362,
+#     }
 
-DB_CONFIG = get_db_config()
+DB_CONFIG = db_utils.get_db_config();
 
 def setup_db():
     try:

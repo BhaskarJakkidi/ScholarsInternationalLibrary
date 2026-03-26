@@ -2,14 +2,10 @@ import psycopg2
 import hashlib
 import random
 
+import db_utils
+
 # Connection details – adjust to your PostgreSQL setup
-DB_CONFIG = {
-    "dbname": "postgres",
-    "user": "admin",
-    "password": "admin1231",
-    "host": "localhost",   # or your server IP
-    "port": 5432
-}
+DB_CONFIG = db_utils.get_db_config();
 
 def hash_password(password: str) -> str:
     """Hash password using SHA256."""
