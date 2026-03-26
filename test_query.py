@@ -1,15 +1,9 @@
-import duckdb
-DB_NAME = "mnt/data/library.duckdb"
-def connect_db():
-    # Persistent DuckDB file
-    return duckdb.connect(DB_NAME)
-# Connect to your DuckDB file
-conn = connect_db()
+import psycopg2
 
-# Run a query
-rows = conn.execute("select *  FROM users").fetchall()
-
-for row in rows:
-    print(row)
-
+conn = psycopg2.connect(
+    "postgresql://postgres:TpqTueRhigoVZeNksTpfdIWggGWoircA@crossover.proxy.rlwy.net:30362/railway"
+)
+cursor = conn.cursor()
+cursor.execute("SELECT 1;")
+print(cursor.fetchone())
 conn.close()

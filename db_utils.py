@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 # Connection details – scale to Render DATABASE_URL or local fallback
 def get_db_config():
     database_url = os.getenv("DATABASE_URL")
+    DATABASE_URL="DATABASE_URL=postgresql://postgres:TpqTueRhigoVZeNksTpfdIWggGWoircA@crossover.proxy.rlwy.net:30362/railway"
     if database_url:
         result = urlparse(database_url)
         return {
@@ -17,11 +18,11 @@ def get_db_config():
             "port": result.port,
         }
     return {
-        "dbname": "postgres",
-        "user": "admin",
-        "password": "admin1231",
-        "host": "localhost",
-        "port": 5432,
+        "dbname": "railway",
+        "user": "postgres",
+        "password": "TpqTueRhigoVZeNksTpfdIWggGWoircA",
+        "host": "crossover.proxy.rlwy.net",
+        "port": 30362,
     }
 
 DB_CONFIG = get_db_config()
