@@ -66,7 +66,7 @@ def change_seat(user_id, new_seat):
     user_id = int(user_id)
 
     new_seat = int(new_seat)
-    cursor.execute("SELECT COUNT(*) FROM users WHERE seat=%s AND id!=%s", (new_seat, user_id))
+    cursor.execute("SELECT COUNT(*) FROM users WHERE seat=%s AND id!=%s AND active_status=1", (new_seat, user_id))
     result = cursor.fetchone()
     
     if result[0] > 0:
@@ -131,7 +131,7 @@ def activate_user(user_id, start_date, plan, payment_mode, remarks, seat):
 def get_users():
     conn = connect_db()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM users order by seat asc")
+    cursor.execute("SELECT * FROM users where active_status=1 order by seat asc")
     rows = cursor.fetchall()
     conn.close()
     return rows
@@ -154,7 +154,7 @@ def get_upcoming_renewals():
         FROM users
         WHERE renewal_date IS NOT NULL
         AND DATE(renewal_date) <= DATE(%s) AND active_status=1
-        ORDER BY seat ASC
+        ORDER BY renewal_date,seat ASC
     """, (cutoff_date,))
     results = cursor.fetchall()
     conn.close()
