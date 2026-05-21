@@ -3,6 +3,7 @@ import streamlit as st
 import psycopg2
 import hashlib
 import random
+import datetime
 import db_utils
 from urllib.parse import urlparse
 
@@ -48,7 +49,7 @@ def verify_user(username, password):
     return False, None, None
 
 # Initialize session state
-for key in ["authenticated", "username", "role", "mfa_secret", "auth_step", "menu"]:
+for key in ["authenticated", "username", "role", "mfa_secret", "auth_step", "menu", "auth_expiry"]:
     if key not in st.session_state:
         st.session_state[key] = None
 
@@ -57,16 +58,22 @@ def login():
 
     username = st.text_input("Username")
     password = st.text_input("Password", type="password")
+    code = st.text_input("MFA Code")
 
     if st.button("Login"):
         valid, role, mfa_secret = verify_user(username, password)
         if valid:
-            # Step 2: MFA prompt
-            st.session_state.username = username
-            st.session_state.role = role
-            st.session_state.mfa_secret = mfa_secret
-            st.session_state.auth_step = "mfa"
-           # st.experimental_rerun()
+            if code == mfa_secret:
+                st.session_state.authenticated = True
+                st.session_state.username = username
+                st.session_state.role = role
+                st.session_state.mfa_secret = mfa_secret
+                st.session_state.auth_expiry = datetime.datetime.now() + datetime.timedelta(hours=1)
+                st.session_state.menu = "Dashboard"
+                st.success(f"Welcome, {username}! Your session is valid for 1 hour.")
+                st.rerun()
+            else:
+                st.error("Invalid MFA code")
         else:
             st.error("Invalid username or password")
 
@@ -75,16 +82,15 @@ def mfa_verify():
     code = st.text_input("Enter MFA code")
 
     if st.button("Verify"):
-        # Compare entered code with secret stored in DB
         if code == st.session_state.mfa_secret:
             st.session_state.authenticated = True
-            st.success(f"Welcome, {st.session_state.username}!")
+            st.session_state.auth_expiry = datetime.datetime.now() + datetime.timedelta(hours=1)
             st.session_state.menu = "Dashboard"
-           # st.experimental_rerun()
+            st.success(f"Welcome, {st.session_state.username}! Your session is valid for 1 hour.")
+            st.rerun()
         else:
             st.error("Invalid MFA code")
 
 def logout():
-    for key in ["authenticated", "username", "role", "mfa_secret", "auth_step", "menu"]:
+    for key in ["authenticated", "username", "role", "mfa_secret", "auth_step", "menu", "auth_expiry"]:
         st.session_state[key] = None
-    #st.experimental_rerun()
