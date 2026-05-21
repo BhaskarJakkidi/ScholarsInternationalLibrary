@@ -78,6 +78,40 @@ def change_seat(user_id, new_seat):
     conn.close()
     return True, "Seat updated successfully!"
 
+
+def update_user_details(user_id, name, phone, email, course, seat, plan, start_date, payment_mode):
+    conn = connect_db()
+    cursor = conn.cursor()
+
+    user_id = int(user_id)
+    seat = int(seat)
+
+    cursor.execute("SELECT COUNT(*) FROM users WHERE seat=%s AND id!=%s AND active_status=1", (seat, user_id))
+    result = cursor.fetchone()
+    if result[0] > 0:
+        conn.close()
+        return False, f"Seat {seat} is already assigned to another active user."
+
+    if plan == "15 days":
+        renewal = datetime.strptime(start_date, "%Y-%m-%d") + timedelta(days=15)
+    elif plan == "1 month":
+        renewal = datetime.strptime(start_date, "%Y-%m-%d") + timedelta(days=30)
+    else:
+        renewal = datetime.strptime(start_date, "%Y-%m-%d") + timedelta(days=90)
+
+    cursor.execute(
+        """
+        UPDATE users
+        SET name=%s, phone=%s, email=%s, course=%s, seat=%s, start_date=%s, payment_plan=%s, payment_mode=%s, renewal_date=%s
+        WHERE id=%s
+        """,
+        (name, phone, email, course, seat, start_date, plan, payment_mode, renewal.strftime("%Y-%m-%d"), user_id)
+    )
+    conn.commit()
+    conn.close()
+    return True, "User details updated successfully!"
+
+
 def get_user_details():
     conn = connect_db()
     query = """
@@ -135,6 +169,16 @@ def get_users():
     rows = cursor.fetchall()
     conn.close()
     return rows
+
+
+def get_deactivated_users():
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM users where active_status=0 ORDER BY id ASC")
+    rows = cursor.fetchall()
+    conn.close()
+    return rows
+
 
 def get_total_seats():
     conn = connect_db()
