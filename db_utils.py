@@ -174,7 +174,7 @@ def get_users():
 def get_deactivated_users():
     conn = connect_db()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM users where active_status=0 ORDER BY id ASC")
+    cursor.execute("SELECT * FROM users where active_status=0 ORDER BY name ASC")
     rows = cursor.fetchall()
     conn.close()
     return rows

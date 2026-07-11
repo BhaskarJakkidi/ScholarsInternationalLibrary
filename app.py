@@ -275,7 +275,16 @@ else:
                 axis=1
             )
 
-            selection = st.selectbox("Select Deactivated User to Activate", df["Display"], key="activate_user_select")
+            # Initialize session state for activate user
+            if "activate_user_selected" not in st.session_state:
+                st.session_state.activate_user_selected = df["Display"].iloc[0]
+
+            def update_activate_selection():
+                st.session_state.activate_user_selected = st.session_state.activate_user_select
+
+            selection = st.selectbox("Select Deactivated User to Activate", df["Display"], key="activate_user_select", 
+                                    index=list(df["Display"]).index(st.session_state.activate_user_selected) if st.session_state.activate_user_selected in list(df["Display"]) else 0,
+                                    on_change=update_activate_selection)
 
             if selection:
                 user_row = df[df["Display"] == selection].iloc[0]
@@ -284,12 +293,12 @@ else:
                 st.subheader(f"Activate {user_row['Name']}")
                 st.write(f"Phone: {user_row['Phone']} | Email: {user_row['Email']}")
 
-                with st.form("activate_user_form"):
-                    start_date = st.date_input("Start Date", value=pd.to_datetime(user_row["StartDate"]).date() if pd.notna(user_row["StartDate"]) else datetime.date.today(), key="reactivate_start_date")
-                    plan = st.selectbox("Payment Plan", ["15 days", "1 month", "3 months"], index=( ["15 days", "1 month", "3 months"].index(user_row["Plan"]) if user_row["Plan"] in ["15 days", "1 month", "3 months"] else 0), key="reactivate_plan")
-                    payment_mode = st.selectbox("Payment Mode", ["Cash", "Card", "UPI", "NetBanking"], index=( ["Cash", "Card", "UPI", "NetBanking"].index(user_row["PaymentMode"]) if user_row["PaymentMode"] in ["Cash", "Card", "UPI", "NetBanking"] else 0), key="reactivate_payment_mode")
-                    seat = st.number_input("Seat Number", min_value=1, max_value=110, value=int(user_row["Seat"] or 1), key="reactivate_seat")
-                    remarks = st.text_area("Remarks / Notes", value=user_row["Remarks"], key="reactivate_remarks")
+                with st.form(f"activate_user_form_{user_id}"):
+                    start_date = st.date_input("Start Date", value=pd.to_datetime(user_row["StartDate"]).date() if pd.notna(user_row["StartDate"]) else datetime.date.today(), key=f"reactivate_start_date_{user_id}")
+                    plan = st.selectbox("Payment Plan", ["15 days", "1 month", "3 months"], index=( ["15 days", "1 month", "3 months"].index(user_row["Plan"]) if user_row["Plan"] in ["15 days", "1 month", "3 months"] else 0), key=f"reactivate_plan_{user_id}")
+                    payment_mode = st.selectbox("Payment Mode", ["Cash", "Card", "UPI", "NetBanking"], index=( ["Cash", "Card", "UPI", "NetBanking"].index(user_row["PaymentMode"]) if user_row["PaymentMode"] in ["Cash", "Card", "UPI", "NetBanking"] else 0), key=f"reactivate_payment_mode_{user_id}")
+                    seat = st.number_input("Seat Number", min_value=1, max_value=110, value=int(user_row["Seat"] or 1), key=f"reactivate_seat_{user_id}")
+                    remarks = st.text_area("Remarks / Notes", value=user_row["Remarks"], key=f"reactivate_remarks_{user_id}")
                     activate_btn = st.form_submit_button("Activate User")
 
                 if activate_btn:
